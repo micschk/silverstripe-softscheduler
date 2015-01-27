@@ -1,5 +1,5 @@
-SoftScheduler - non-cron Embargo & Expiry Module
-================================================
+#SoftScheduler 
+##non-cron Embargo & Expiry Module
 
 This module allows you to specify when a page should become available (embargo) and when it should expire. It's called 'softscheduler' because it doesn't take care of publishing or unpublishing pages. Instead it checks if a published page should be available according to its set embargo/expire dates.
 
