@@ -1,0 +1,18 @@
+{
+    "name": "micschk/silverstripe-softscheduler",
+    "description": "Adds a very simple way to schedule (Embarg0/Expire) SiteTree items",
+    "type": "silverstripe-module",
+    "keywords": ["silverstripe", "embargo", "expiry", "sitetree", "schedule"],
+    "authors": [
+    {
+        "name": "micschk"
+    }],
+    "require": {
+        "silverstripe/framework": "~3.0",
+		"silverstripe/cms": "~3.0"
+    },
+	"extra": {
+		"installer-name": "softscheduler"
+	}
+    
+}
