@@ -89,10 +89,14 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 		return false;
     }
 	
-	public function updateStatusFlags( $flags ){
-        //$flags = parent::getStatusFlags();
-        $flags['scheduledstatus'] = _t("Scheduler.SCHEDULED", "Scheduled");
-        $flags['expiredstatus'] = _t("Scheduler.EXPIRED", "Expired");
+	public function updateStatusFlags( & $flags ){
+        
+		if($this->owner->getScheduledStatus()){
+			$flags['status-scheduled'] = _t("Scheduler.SCHEDULED", "Scheduled");
+		}
+		if($this->owner->getExpiredStatus()){
+			$flags['status-expired'] = _t("Scheduler.EXPIRED", "Expired");
+		}
         return $flags;
     }
 	
@@ -100,11 +104,11 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 	 * Return nice statusses for use in Gridfields (eg. GridFieldPages module or descendants)
 	 */
 	
-	function updateStatus( & $status){
+	function updateStatus( & $status, & $statusflag){
 		if ( $this->owner->getScheduledStatus() ) {
 			$status = _t(
 				"Scheduler.Scheduled", 
-				'<i class="status-icon btn-icon-sprite status-icon-scheduled"></i> Scheduled for {date}', 
+				'<i class="btn-icon btn-icon-sprite btn-icon-accept_disabled"></i> Scheduled for {date}', 
 				"State for when a post is scheduled.", 
 				array(
 					"date" => $this->owner->dbObject("Embargo")->Nice()
@@ -114,7 +118,7 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 		if ( $this->owner->getExpiredStatus() ) {
 			$status = _t(
 				"Scheduler.Expired", 
-				'<i class="status-icon btn-icon-sprite status-icon-expired"></i> Expired on {date}', 
+				'<i class="btn-icon btn-icon-sprite btn-icon-minus-circle_disabled"></i> Expired on {date}', 
 				"State for when a post is expired.", 
 				array(
 					"date" => $this->owner->dbObject("Expiry")->Nice()

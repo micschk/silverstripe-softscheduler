@@ -1,14 +1,14 @@
-.status-icon-scheduled {
-  background-position: 0 -80px;
-}
-.status-icon-expired {
-  background-position: 0 -128px;
-}
-
 .cms table.ss-gridfield-table tr td .btn-icon-sprite {
   width: 16px;
   height: 16px;
   display: block;
   float: left;
   margin-right: 6px;
+}
+
+.cms-tree.jstree-apple span.badge.status-status-scheduled, 
+.cms-tree.jstree-apple span.badge.status-status-expired {
+	color: #7E7470;
+	border: 1px solid #C9B800;
+	background-color: #FFF0BC;
 }
