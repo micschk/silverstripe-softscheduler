@@ -60,6 +60,20 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 			)->setHeadingLevel(4),
 			'Content');
 		
+		
+		//$fields->findOrMakeTab($tabName);
+		//$fields->insertAfter(TextField::create('Test'),'Header');
+//		Debug::dump($fields->fieldByName('Root.Main.Options'));
+//		$optionspanel = $fields->fieldByName('Root.Main.Options');
+//		$optionspanel->push(TextField::create('Test'));
+		
+//		$optbar = $fields->fieldByName('Root.Main.Options');
+//		if(! $optbar){
+//			$fields->addFieldsToTab('Root.Main', $optbar = RightSidebar::create('Options'));
+//		}
+//		$optbar->push( $publishDate );
+//		$optbar->push( $unpublishDate );
+//		$fields->fieldByName('Root')->setTemplate('RightSidebarInner');
 	}
 	
 	public function onBeforeWrite() {
@@ -221,6 +235,24 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 //				));
 //		}
 		
+//		$stage = Versioned::current_stage();
+//		if($stage == 'Live' || !Permission::check("VIEW_DRAFT_CONTENT")) {
+//			$query->addWhere("PublishDate < '" . Convert::raw2sql(SS_Datetime::now()) . "'");
+//		}
+		
 	}
+	
+	/**
+	 * Maybe implement this as well?
+	 * This is a fix so that when we try to fetch subclasses of BlogPost,
+	 * lazy loading includes the BlogPost table in its query. Leaving this table out
+	 * means the default sort order column PublishDate causes an error.
+	 *
+	 * @see https://github.com/silverstripe/silverstripe-framework/issues/1682
+	**/
+//	public function augmentLoadLazyFields(SQLQuery &$query, &$dataQuery, $parent) {
+//		// Ensures that we're joining the BlogPost table which holds required db fields.
+//		$dataQuery->innerJoin("BlogPost", "`SiteTree`.`ID` = `BlogPost`.`ID`");
+//	}
 
 }
