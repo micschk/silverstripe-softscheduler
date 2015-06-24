@@ -37,7 +37,7 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 		$publishDate->getDateField()->setConfig('dateformat', 'dd-MM-yyyy');
 		$publishDate->getDateField()->setConfig("showcalendar", true);
 		$publishDate->getTimeField()->setConfig('timeformat', 'HH:mm');
-		$publishDate->getTimeField()->setAttribute('placeholder', 'HH:mm');
+		$publishDate->getTimeField()->setAttribute('placeholder', '00:00');
 		//$publishDate->getTimeField()->setValue("13:00");
 		$publishDate->setRightTitle(_t("Scheduler.LeaveEmptyEmbargo", 
 				"Leave empty to have page available right away (after publishing)"));
@@ -48,7 +48,7 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension {
 //		);
 		$unpublishDate->getDateField()->setConfig('dateformat', 'dd-MM-yyyy');
 		$unpublishDate->getDateField()->setConfig("showcalendar", true);
-		$unpublishDate->getTimeField()->setConfig('timeformat', '00:00');
+		$unpublishDate->getTimeField()->setConfig('timeformat', 'HH:mm');
 		$unpublishDate->getTimeField()->setAttribute('placeholder', '00:00');
 		$unpublishDate->setRightTitle(_t("Scheduler.LeaveEmptyExpire", 
 				"Leave empty to leave page published indefinitely"));
