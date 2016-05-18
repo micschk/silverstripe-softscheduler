@@ -77,16 +77,17 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension
 //		$fields->fieldByName('Root')->setTemplate('RightSidebarInner');
     }
     
-    public function onBeforeWrite()
-    {
-        if ($this->owner->Embargo["date"] && !$this->owner->Embargo["time"]) {
-            $this->owner->Embargo["time"] = "00:00";
-        }
-        if ($this->owner->Expiry["date"] && !$this->owner->Expiry["time"]) {
-            $this->owner->Expiry["time"] = "23:00";
-        }
-        parent::onBeforeWrite();
-    }
+//    public function onBeforeWrite()
+//    {
+//        // this isn't working as expected, as $this->owner->Embargo is a plain datestring...
+//        if ($this->owner->Embargo["date"] && !$this->owner->Embargo["time"]) {
+//            $this->owner->Embargo["time"] = "00:00";
+//        }
+//        if ($this->owner->Expiry["date"] && !$this->owner->Expiry["time"]) {
+//            $this->owner->Expiry["time"] = "23:00";
+//        }
+//        parent::onBeforeWrite();
+//    }
     
     
     /*
@@ -100,6 +101,7 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension
         }
         return false;
     }
+    // is scheduled for publication in future
     public function getScheduledStatus()
     {
         if (! $this->owner->isPublished()) {
@@ -112,6 +114,7 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension
         }
         return false;
     }
+    // has been scheduled for expiry in past
     public function getExpiredStatus()
     {
         if (! $this->owner->isPublished()) {
@@ -119,6 +122,27 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension
         }
         $expiry = $this->owner->dbObject("Expiry");
         if ($this->owner->Expiry && $expiry->InPast()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getEmbargoIsSet()
+    {
+        if (!$this->owner->isPublished()) return false;
+        $embargo = $this->owner->dbObject("Embargo");
+        //Debug::dump(($this->owner->Embargo)? true: false);
+        if ($this->owner->Embargo) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getExpiryIsSet()
+    {
+        if (!$this->owner->isPublished()) return false;
+        $expiry = $this->owner->dbObject("Expiry");
+        if ($this->owner->Expiry) {
             return true;
         }
         return false;
@@ -138,29 +162,59 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension
     /* 
      * Return nice statusses for use in Gridfields (eg. GridFieldPages module or descendants)
      */
-    
-    public function updateStatus(& $status, & $statusflag)
-    {
-        if ($this->owner->getScheduledStatus()) {
-            $status = _t(
-                "Scheduler.Scheduled",
-                '<i class="btn-icon btn-icon-sprite btn-icon-accept_disabled"></i> Scheduled for {date}',
-                "State for when a post is scheduled.",
-                array(
-                    "date" => $this->owner->dbObject("Embargo")->Nice()
-                )
-            );
+
+    function updateStatus( & $status, & $statusflag){
+
+        if ( $this->owner->getEmbargoIsSet() ) {
+            if ( $this->owner->getScheduledStatus() ) {
+                $status .= _t(
+                    "Scheduler.Scheduled",
+                    '<i class="btn-icon btn-icon-sprite btn-icon-accept_disabled scheduler-icon"></i> Scheduled for {date}',
+                    "State for when a post is scheduled.",
+                    array(
+                        "date" => $this->owner->dbObject("Embargo")->Nice()
+                    )
+                );
+            } else {
+                $status .= _t(
+                    "Scheduler.ScheduledSince",
+                    '<i class="btn-icon btn-icon-sprite btn-icon-accept scheduler-icon"></i> Scheduled since {date}',
+                    "State for when a post was scheduled.",
+                    array(
+                        "date" => $this->owner->dbObject("Embargo")->Nice()
+                    )
+                );
+            }
         }
-        if ($this->owner->getExpiredStatus()) {
-            $status = _t(
-                "Scheduler.Expired",
-                '<i class="btn-icon btn-icon-sprite btn-icon-minus-circle_disabled"></i> Expired on {date}',
-                "State for when a post is expired.",
-                array(
-                    "date" => $this->owner->dbObject("Expiry")->Nice()
-                )
-            );
+        if ( $this->owner->getExpiryIsSet() ) {
+            if ( $this->owner->getEmbargoIsSet() ) { $status .= '<br />'; } // add a break if both set
+            if ( $this->owner->getExpiredStatus() ) {
+                $status .= _t(
+                    "Scheduler.Expired",
+                    '<i class="btn-icon btn-icon-sprite btn-icon-minus-circle scheduler-icon"></i> Expired on {date}',
+                    "State for when a post is expired.",
+                    array(
+                        "date" => $this->owner->dbObject("Expiry")->Nice()
+                    )
+                );
+            } else {
+                $status .= _t(
+                    "Scheduler.SetToExpire",
+                    '<i class="btn-icon btn-icon-sprite btn-icon-minus-circle_disabled scheduler-icon"></i> Set to expire on {date}',
+                    "State for when a post is set to expire.",
+                    array(
+                        "date" => $this->owner->dbObject("Expiry")->Nice()
+                    )
+                );
+            }
         }
+    }
+
+    public function ScheduledStatusDataColumn(){
+        $sched_status = '';
+        $sched_flag = '';
+        $this->updateStatus($sched_status,$sched_flag);
+        return DBField::create_field('HTMLText', $sched_status);
     }
 
     /**
@@ -218,35 +272,50 @@ class EmbargoExpirySchedulerExtension extends SiteTreeExtension
     }
     
     // workaround to add extra filtering to Object::get()'s
-    public static function extraWhereQuery($extendedClass)
-    {
-        return "( \"{$extendedClass}\".\"Embargo\" IS NULL OR \"{$extendedClass}\".\"Embargo\" <= NOW() )
-			AND
-			( \"{$extendedClass}\".\"Expiry\" IS NULL OR \"{$extendedClass}\".\"Expiry\" >= NOW() )";
-    }
+//    public static function extraWhereQuery($extendedClass)
+//    {
+//        return "( \"{$extendedClass}\".\"Embargo\" IS NULL OR \"{$extendedClass}\".\"Embargo\" <= NOW() )
+//			AND
+//			( \"{$extendedClass}\".\"Expiry\" IS NULL OR \"{$extendedClass}\".\"Expiry\" >= NOW() )";
+//    }
     
     /*
      * Prevents page from begin included on Holder pages if under embargo or expired
      */
-    public function augmentSQL(SQLQuery &$query)
-    {
-        
-//		$myclass = $this->owner->className;
-//		if (is_subclass_of(Controller::curr(), 'ContentController')) { // on frontend 
-//			$query
-//				->addWhere(array(
-////					"\"{$myclass}\".\"Embargo\" IS NULL OR " .
-//						"\"{$myclass}\".\"Embargo\" <= '" 
-//						. SS_Datetime::now()->getValue() . "'",
-////					"\"{$myclass}\".\"Embargo\" IS NULL OR \"{$myclass}\".\"Embargo\" < NOW()",
-////					"\"{$myclass}\".\"Expiry\" IS NULL OR \"{$myclass}\".\"Expiry\" > NOW()",
-//				));
-//		}
+//    public function augmentSQL(SQLQuery &$query)
+//    {
+//        
+////		$myclass = $this->owner->className;
+////		if (is_subclass_of(Controller::curr(), 'ContentController')) { // on frontend 
+////			$query
+////				->addWhere(array(
+//////					"\"{$myclass}\".\"Embargo\" IS NULL OR " .
+////						"\"{$myclass}\".\"Embargo\" <= '" 
+////						. SS_Datetime::now()->getValue() . "'",
+//////					"\"{$myclass}\".\"Embargo\" IS NULL OR \"{$myclass}\".\"Embargo\" < NOW()",
+//////					"\"{$myclass}\".\"Expiry\" IS NULL OR \"{$myclass}\".\"Expiry\" > NOW()",
+////				));
+////		}
+//
+////		$stage = Versioned::current_stage();
+////		if($stage == 'Live' || !Permission::check("VIEW_DRAFT_CONTENT")) {
+////			$query->addWhere("PublishDate < '" . Convert::raw2sql(SS_Datetime::now()) . "'");
+////		}
+//    }
 
-//		$stage = Versioned::current_stage();
-//		if($stage == 'Live' || !Permission::check("VIEW_DRAFT_CONTENT")) {
-//			$query->addWhere("PublishDate < '" . Convert::raw2sql(SS_Datetime::now()) . "'");
-//		}
+    public function augmentSQL(SQLQuery &$query) {
+        $stage = Versioned::current_stage();
+        if (Controller::curr() instanceof LeftAndMain) {
+            return;
+        }
+        if($stage == 'Live' || !Permission::check('VIEW_DRAFT_CONTENT')) {
+            $query->addWhere(
+//					sprintf(
+                '("Embargo" IS NULL OR "Embargo" < NOW()) AND ("Expiry" IS NULL OR "Expiry" > NOW())'
+            //, Convert::raw2sql(SS_Datetime::now()), Convert::raw2sql(SS_Datetime::now())
+//					)
+            );
+        }
     }
     
     /**
